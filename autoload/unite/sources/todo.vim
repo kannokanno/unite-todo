@@ -1,34 +1,53 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-"if exists("g:loaded_vimticket")
-"  finish
-"endif
-"let g:loaded_vimticket = 1
+let s:todo_file = g:unite_data_directory . '/todo/todo.txt'
+let s:note_dir = g:unite_data_directory . '/todo/note'
 
-command! -nargs=0 VimTicket :call vimticket#add#simple()
-nnoremap <Space><Space> :<C-u>Unite ticket<CR>
-nnoremap <Space>t :<C-u>VimTicket<CR>
+if !isdirectory(s:note_dir)
+ call mkdir(s:note_dir, 'p')
+endif
+if empty(glob(s:todo_file))
+  call writefile([], s:todo_file)
+endif
+
+function! s:update(added)
+  call s:init()
+  let list = []
+  if filereadable(s:todo_file)
+    for line in readfile(s:todo_file)
+      call add(list, line)
+    endfor
+  else
+    " TODO
+    echo 'unread:' . file
+  endif
+
+  for todo in a:added
+    call add(list, "[ ] " . todo)
+  endfor
+  call writefile(list, s:todo_file)
+endfunction
 
 let s:source = {
-      \ 'name':'ticket',
+      \ 'name':'todo',
       \}
 
 function! s:source.gather_candidates(args, context)
-  let lines = readfile(expand('~/.vimticket/tickets.txt'))
+  let lines = readfile(s:todo_file)
   " TODO idをファイル名に
   return map(lines, '{
         \   "word": v:val,
         \   "source": "lines",
-        \   "kind": "vimticket",
-        \   "action__path": expand("~/.vimticket/notes/".v:val.".txt"),
+        \   "kind": "todo",
+        \   "action__path": s:note_dir . "/" . v:val . ".txt",
         \ }')
 endfunction
 call unite#define_source(s:source)
 unlet s:source
 
 let s:kind = {
-      \ 'name' : 'vimticket',
+      \ 'name' : 'todo',
       \ 'default_action' : 'toggle',
       \ 'action_table': {},
       \ 'is_selectable': 1,
@@ -36,7 +55,7 @@ let s:kind = {
       \}
 
 let s:kind.action_table.delete = {
-      \ 'description' : 'delete ticket',
+      \ 'description' : 'delete todo',
       \ 'is_selectable': 1,
       \ 'is_quit': 0,
       \ 'is_invalidate_cache': 1,
@@ -47,7 +66,7 @@ function! s:kind.action_table.delete.func(candidates)
       call delete(candidate.action__path)
     endif
     let list = []
-    let file = expand('~/.vimticket/tickets.txt')
+    let file = expand(s:todo_file)
     for line in readfile(file)
       if line == candidate.word 
         continue
@@ -67,7 +86,7 @@ let s:kind.action_table.toggle = {
 function! s:kind.action_table.toggle.func(candidates)
   for candidate in a:candidates
     let list = []
-    let file = expand('~/.vimticket/tickets.txt')
+    let file = expand(s:todo_file)
     for line in readfile(file)
       if line == candidate.word 
         if line =~ '^\[X\]'
@@ -86,3 +105,5 @@ call unite#define_kind(s:kind)
 unlet s:kind
 
 let &cpo = s:save_cpo
+
+nnoremap <Space><Space> :<C-u>Unite todo<CR>
