@@ -26,10 +26,17 @@ function! s:pattern(args)
     return 'v:val.status =~ "[X]"'
   elseif arg ==? 'undone' 
     return 'v:val.status !~ "[X]"'
+  elseif arg ==? 'tag' 
+    if len(a:args) < 2 || empty(a:args[1])
+      return ''
+    endif
+    return 'index(v:val.tags, "@'.a:args[1].'") != -1'
   endif
   return ''
 endfunction
 
+command! -nargs=0 UniteTodoAdd call s:add(input('Todo:'))
+nnoremap <Space>a :<C-u>UniteTodoAdd<CR>
 let &cpo = s:save_cpo
 
 " TODO defineのほうが呼ばれない
@@ -50,7 +57,7 @@ function! s:struct(line)
   elseif len(words) == 4
     let tags = [words[3]] 
   else
-    let tags = words[3]
+    let tags = words[3:]
   endif
   return {
         \ 'id': words[0],
@@ -68,17 +75,18 @@ function! s:select(pattern)
 endfunction
 
 function! s:all()
-  let todo = s:select([])
-  if empty(todo)
-    call s:update([s:new('Please action add(a) for todo')])
-    return s:select([])
+  let list = s:select([])
+  if empty(list)
+    let todo = s:new('Please action add(a) for todo')
+    call s:update([todo])
+    return [todo]
   endif
-  return todo
+  return list
 endfunction
 
-function! s:update(list)
+function! s:update(structs)
   call writefile(
-        \ map(a:list, 'join([v:val.id, v:val.status, v:val.title, join(v:val.tags)], ",")'),
+        \ map(a:structs, 'join([v:val.id, v:val.status, v:val.title, join(v:val.tags, ",")], ",")'),
         \ s:todo_file)
 endfunction
 
@@ -87,7 +95,9 @@ function! s:new(title)
 endfunction
 
 function! s:add(title)
-  call s:update(insert(s:all(), s:new(a:title)))
+  if !empty(a:title)
+    call s:update(insert(s:all(), s:new(a:title)))
+  endif
 endfunction
 
 function! s:rename(todo)
@@ -137,22 +147,34 @@ let s:kind.action_table.add = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.add.func(candidate)
-  let title = input('Input Todo:')
-  if !empty(title)
-    call s:add(title)
-  endif
+  call s:add(input('Input Todo:'))
 endfunction
 
-let s:kind.action_table.rename = {
-      \ 'description' : 'rename todo',
+let s:kind.action_table.edit_title = {
+      \ 'description' : 'edit todo title',
       \ 'is_quit': 0,
       \ 'is_invalidate_cache': 1,
       \ }
-function! s:kind.action_table.rename.func(candidate)
+function! s:kind.action_table.edit_title.func(candidate)
   let todo = s:struct(a:candidate.source__line)
-  let after = input('Rename Todo:' . todo.title . '->', todo.title)
+  let after = input('Todo:' . todo.title . '->', todo.title)
   if !empty(after)
     let todo.title = after
+    call s:rename(todo)
+  endif
+endfunction
+
+let s:kind.action_table.edit_tag = {
+      \ 'description' : 'edit todo tag',
+      \ 'is_quit': 0,
+      \ 'is_invalidate_cache': 1,
+      \ }
+function! s:kind.action_table.edit_tag.func(candidate)
+  let todo = s:struct(a:candidate.source__line)
+  let before = join(map(todo.tags, 'substitute(v:val, "^@", "", "")'), ',')
+  let after = input('Tags(comma separate):' . before . '->', before)
+  if !empty(after)
+    let todo.tags = map(split(after, ','), '"@".v:val')
     call s:rename(todo)
   endif
 endfunction
@@ -185,14 +207,14 @@ function! s:kind.action_table.toggle.func(candidates)
   endfor
 endfunction
 
-let s:kind.action_table.tag = {
-      \ 'description' : 'add tag',
+let s:kind.action_table.add_tag = {
+      \ 'description' : 'add todo tag',
       \ 'is_selectable': 1,
       \ 'is_quit': 0,
       \ 'is_invalidate_cache': 1,
       \ }
-function! s:kind.action_table.tag.func(candidates)
-  let tags = input('Input tags(comma separate):')
+function! s:kind.action_table.add_tag.func(candidates)
+  let tags = input('Tags(comma separate):')
   " TODO 毎回ファイルI/Oさせてるので非効率
   for candidate in a:candidates
     let todo = s:struct(candidate.source__line)
