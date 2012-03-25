@@ -6,15 +6,19 @@ let s:source = {
       \}
 
 function! s:source.gather_candidates(args, context)
-  " TODO idをファイル名に
-  " TODO action__pathのとり方
-  " TODO 正規表現使えないの？
-  return map(s:list('v:val !~ "[X]"'), '{
-        \   "word": v:val,
-        \   "source": "lines",
-        \   "kind": "todo",
-        \   "action__path": g:unite_data_directory . "/todo/note/" . v:val . ".txt",
-        \ }')
+  let candidates = []
+  for todo in s:all()
+  "for todo in s:select('v:val.status !~ "[X]"')
+    call add(candidates, {
+          \   "word": join([todo.status, todo.title, join(todo.tags)]),
+          \   "source": "lines",
+          \   "kind": "todo",
+          \   "action__path": todo.note,
+          \   "source__line": todo.line,
+          \ })
+    unlet todo
+  endfor
+  return candidates
 endfunction
 let &cpo = s:save_cpo
 
@@ -29,65 +33,79 @@ set cpo&vim
 let s:todo_file = g:unite_data_directory . '/todo/todo.txt'
 let s:note_dir = g:unite_data_directory . '/todo/note'
 
-function! s:list(pattern)
-  let list = []
-  for line in readfile(s:todo_file)
-    call add(list, line)
-  endfor
-  return empty(a:pattern) ? list : filter(list, a:pattern)
+function! s:struct(line)
+  let words = split(a:line, ',') 
+  if len(words) < 4
+    let tags = [] 
+  elseif len(words) == 4
+    let tags = [words[3]] 
+  else
+    let tags = words[3]
+  endif
+  return {
+        \ 'id': words[0],
+        \ 'status': words[1],
+        \ 'title': words[2],
+        \ 'tags': tags,
+        \ 'note': g:unite_data_directory . "/todo/note/" . words[0] . ".txt",
+        \ 'line': a:line,
+        \ }
+endfunction
+
+function! s:select(pattern)
+  let todo_list = map(readfile(s:todo_file), 's:struct(v:val)')
+  return empty(a:pattern) ? todo_list : filter(todo_list, a:pattern)
 endfunction
 
 function! s:all()
-  return s:list([])
-endfunction
-
-function! s:note(id)
-  return g:unite_data_directory . "/todo/note/" . a:id . ".txt"
+  return s:select([])
 endfunction
 
 function! s:update(list)
-  call writefile(a:list, s:todo_file)
+  call writefile(
+        \ map(a:list, 'join([v:val.id, v:val.status, v:val.title, join(v:val.tags)], ",")'),
+        \ s:todo_file)
 endfunction
 
-function! s:add(id)
-  call s:update(insert(s:all(), "[ ] " . a:id))
+function! s:new(title)
+  return s:struct(join([localtime(), '[ ]', a:title], ','))
 endfunction
 
-" TODO flagはださい
-function! s:rename(id, after, append)
+function! s:add(title)
+  call s:update(insert(s:all(), s:new(a:title)))
+endfunction
+
+function! s:rename(todo)
   let list = []
-  for line in s:all()
-    if line == a:id 
-      let line = a:append ? line . a:after : a:after
+  for todo in s:all()
+    if todo.id == a:todo.id 
+      call add(list, a:todo)
+    else
+      call add(list, todo)
     endif
-    call add(list, line)
   endfor
   call s:update(list)
 endfunction
 
-function! s:delete(id)
-  let note = s:note(a:id)
+function! s:delete(todo)
+  let note = a:todo.note
   if filewritable(note) && !isdirectory(note)
     call delete(note)
   endif
-  call s:update(s:list('v:val !=# "'.a:id.'"'))
+  call s:update(s:select('v:val.id !=# "'.a:todo.id.'"'))
 endfunction
 
-function! s:toggle(id)
+function! s:toggle(todo)
   let list = []
-  for line in s:all()
-    if line == a:id 
-      let line = line =~ '^\[X\]' ? 
-            \ substitute(line, '\[X\]<.*>', '[ ]', "") :
-            \ substitute(line, '\[ \]', "[X]<".strftime("%Y/%m/%d %H:%M").">", "")
+  for todo in s:all()
+    if todo.id == a:todo.id 
+      let todo.status = todo.status =~ '^\[X\]' ? 
+            \ "[ ]" :
+            \ "[X]<".strftime("%Y/%m/%d %H:%M").">"
     endif
-    call add(list, line)
+    call add(list, todo)
   endfor
   call s:update(list)
-endfunction
-
-function! s:tag(id, tag)
-  call s:rename(a:id, ' @' . a:tag, 1)
 endfunction
 
 let s:kind = {
@@ -104,7 +122,10 @@ let s:kind.action_table.add = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.add.func(candidate)
-  call s:add(input('Input Todo:'))
+  let title = input('Input Todo:')
+  if !empty(title)
+    call s:add(title)
+  endif
 endfunction
 
 let s:kind.action_table.rename = {
@@ -113,9 +134,12 @@ let s:kind.action_table.rename = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.rename.func(candidate)
-  call s:rename(a:candidate.word,
-        \input('Rename Todo:' . a:candidate.word . '->',
-        \a:candidate.word), 0)
+  let todo = s:struct(a:candidate.source__line)
+  let after = input('Rename Todo:' . todo.title . '->', todo.title)
+  if !empty(after)
+    let todo.title = after
+    call s:rename(todo)
+  endif
 endfunction
 
 let s:kind.action_table.delete = {
@@ -127,7 +151,7 @@ let s:kind.action_table.delete = {
 function! s:kind.action_table.delete.func(candidates)
   for candidate in a:candidates
     " TODO 毎回ファイルI/Oさせてるので非効率
-    call s:delete(candidate.word)
+    call s:delete(s:struct(candidate.source__line))
   endfor
 endfunction
 
@@ -140,7 +164,7 @@ let s:kind.action_table.toggle = {
 function! s:kind.action_table.toggle.func(candidates)
   for candidate in a:candidates
     " TODO 毎回ファイルI/Oさせてるので非効率
-    call s:toggle(candidate.word)
+    call s:toggle(s:struct(candidate.source__line))
   endfor
 endfunction
 
@@ -151,10 +175,12 @@ let s:kind.action_table.tag = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.tag.func(candidates)
-  let tag = input('Input tag:')
+  let tags = input('Input tags(comma separate):')
+  " TODO 毎回ファイルI/Oさせてるので非効率
   for candidate in a:candidates
-    " TODO 毎回ファイルI/Oさせてるので非効率
-    call s:tag(candidate.word, tag)
+    let todo = s:struct(candidate.source__line)
+    call extend(todo.tags, map(split(tags, ','), '"@".v:val'))
+    call s:rename(todo)
   endfor
 endfunction
 
