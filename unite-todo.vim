@@ -35,8 +35,10 @@ function! s:pattern(args)
   return ''
 endfunction
 
-command! -nargs=0 UniteTodoAdd call s:add(input('Todo:'))
-nnoremap <Space>a :<C-u>UniteTodoAdd<CR>
+command! -nargs=0 UniteTodoAddSimple call s:add([input('Todo:')])
+nnoremap <Space>a :<C-u>UniteTodoAddSimple<CR>
+command! -nargs=0 -range UniteTodoAddRange call s:add(reverse(getbufline('%', <line1>, <line2>)))
+command! -nargs=0 UniteTodoAddBuffer call s:add(reverse(getbufline('%', 1, '$')))
 let &cpo = s:save_cpo
 
 " TODO defineのほうが呼ばれない
@@ -75,13 +77,7 @@ function! s:select(pattern)
 endfunction
 
 function! s:all()
-  let list = s:select([])
-  if empty(list)
-    let todo = s:new('Please action add(a) for todo')
-    call s:update([todo])
-    return [todo]
-  endif
-  return list
+  return s:select([])
 endfunction
 
 function! s:update(structs)
@@ -90,14 +86,27 @@ function! s:update(structs)
         \ s:todo_file)
 endfunction
 
-function! s:new(title)
-  return s:struct(join([localtime(), '[ ]', a:title], ','))
+function! s:new(id, title)
+  return s:struct(join([a:id, '[ ]', a:title], ','))
 endfunction
 
-function! s:add(title)
-  if !empty(a:title)
-    call s:update(insert(s:all(), s:new(a:title)))
+" TODO もうちょい綺麗に
+function! s:add(title_list)
+  let size = len(a:title_list)
+  if size == 0
+    echo 'todo is empty'
+  else
+    for i in range(0, size-1)
+      let title = s:trim(a:title_list[i])
+      if !empty(title)
+        call s:update(insert(s:all(), s:new(localtime().'_'.i, title)))
+      endif
+    endfor
   endif
+endfunction
+
+function! s:trim(str)
+  return substitute(a:str, '^\s\+\|\s\+$', '', 'g')
 endfunction
 
 function! s:rename(todo)
@@ -141,15 +150,6 @@ let s:kind = {
       \ 'parents': ['jump_list'],
       \}
 
-let s:kind.action_table.add = {
-      \ 'description' : 'add todo',
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
-function! s:kind.action_table.add.func(candidate)
-  call s:add(input('Input Todo:'))
-endfunction
-
 let s:kind.action_table.edit_title = {
       \ 'description' : 'edit todo title',
       \ 'is_quit': 0,
@@ -157,7 +157,7 @@ let s:kind.action_table.edit_title = {
       \ }
 function! s:kind.action_table.edit_title.func(candidate)
   let todo = s:struct(a:candidate.source__line)
-  let after = input('Todo:' . todo.title . '->', todo.title)
+  let after = s:trim(input('Todo:' . todo.title . '->', todo.title))
   if !empty(after)
     let todo.title = after
     call s:rename(todo)
@@ -172,7 +172,7 @@ let s:kind.action_table.edit_tag = {
 function! s:kind.action_table.edit_tag.func(candidate)
   let todo = s:struct(a:candidate.source__line)
   let before = join(map(todo.tags, 'substitute(v:val, "^@", "", "")'), ',')
-  let after = input('Tags(comma separate):' . before . '->', before)
+  let after = s:trim(input('Tags(comma separate):' . before . '->', before))
   if !empty(after)
     let todo.tags = map(split(after, ','), '"@".v:val')
     call s:rename(todo)
@@ -214,13 +214,15 @@ let s:kind.action_table.add_tag = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.add_tag.func(candidates)
-  let tags = input('Tags(comma separate):')
-  " TODO 毎回ファイルI/Oさせてるので非効率
-  for candidate in a:candidates
-    let todo = s:struct(candidate.source__line)
-    call extend(todo.tags, map(split(tags, ','), '"@".v:val'))
-    call s:rename(todo)
-  endfor
+  let tags = s:trim(input('Tags(comma separate):'))
+  if !empty(tags)
+    " TODO 毎回ファイルI/Oさせてるので非効率
+    for candidate in a:candidates
+      let todo = s:struct(candidate.source__line)
+      call extend(todo.tags, map(split(tags, ','), '"@".v:val'))
+      call s:rename(todo)
+    endfor
+  endif
 endfunction
 
 " TODO defineのほうが呼ばれない
