@@ -7,11 +7,10 @@ let s:source = {
 
 function! s:source.gather_candidates(args, context)
   let candidates = []
-  for todo in s:all()
-  "for todo in s:select('v:val.status !~ "[X]"')
+  let list = empty(a:args) ? s:all() : s:select(s:pattern(a:args))
+  for todo in list
     call add(candidates, {
           \   "word": join([todo.status, todo.title, join(todo.tags)]),
-          \   "source": "lines",
           \   "kind": "todo",
           \   "action__path": todo.note,
           \   "source__line": todo.line,
@@ -20,6 +19,17 @@ function! s:source.gather_candidates(args, context)
   endfor
   return candidates
 endfunction
+
+function! s:pattern(args)
+  let arg = a:args[0]
+  if arg ==? 'done' 
+    return 'v:val.status =~ "[X]"'
+  elseif arg ==? 'undone' 
+    return 'v:val.status !~ "[X]"'
+  endif
+  return ''
+endfunction
+
 let &cpo = s:save_cpo
 
 " TODO defineのほうが呼ばれない
@@ -58,7 +68,12 @@ function! s:select(pattern)
 endfunction
 
 function! s:all()
-  return s:select([])
+  let todo = s:select([])
+  if empty(todo)
+    call s:update([s:new('Please action add(a) for todo')])
+    return s:select([])
+  endif
+  return todo
 endfunction
 
 function! s:update(list)
@@ -149,10 +164,12 @@ let s:kind.action_table.delete = {
       \ 'is_invalidate_cache': 1,
       \ }
 function! s:kind.action_table.delete.func(candidates)
-  for candidate in a:candidates
-    " TODO 毎回ファイルI/Oさせてるので非効率
-    call s:delete(s:struct(candidate.source__line))
-  endfor
+  if input('delete ok? [y/N]') =~? '^y\%[es]$'
+    for candidate in a:candidates
+      " TODO 毎回ファイルI/Oさせてるので非効率
+      call s:delete(s:struct(candidate.source__line))
+    endfor
+  endif
 endfunction
 
 let s:kind.action_table.toggle = {
