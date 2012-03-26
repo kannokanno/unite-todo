@@ -66,7 +66,7 @@ function! s:struct(line)
         \ 'status': words[1],
         \ 'title': words[2],
         \ 'tags': tags,
-        \ 'note': g:unite_data_directory . "/todo/note/" . words[0] . ".txt",
+        \ 'note': s:note_dir . '/' . words[0] . ".txt",
         \ 'line': a:line,
         \ }
 endfunction
@@ -150,11 +150,7 @@ let s:kind = {
       \ 'parents': ['jump_list'],
       \}
 
-let s:kind.action_table.edit_title = {
-      \ 'description' : 'edit todo title',
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
+let s:kind.action_table.edit_title = { 'description' : 'edit todo title' }
 function! s:kind.action_table.edit_title.func(candidate)
   let todo = s:struct(a:candidate.source__line)
   let after = s:trim(input('Todo:' . todo.title . '->', todo.title))
@@ -164,55 +160,7 @@ function! s:kind.action_table.edit_title.func(candidate)
   endif
 endfunction
 
-let s:kind.action_table.edit_tag = {
-      \ 'description' : 'edit todo tag',
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
-function! s:kind.action_table.edit_tag.func(candidate)
-  let todo = s:struct(a:candidate.source__line)
-  let before = join(map(todo.tags, 'substitute(v:val, "^@", "", "")'), ',')
-  let after = s:trim(input('Tags(comma separate):' . before . '->', before))
-  if !empty(after)
-    let todo.tags = map(split(after, ','), '"@".v:val')
-    call s:rename(todo)
-  endif
-endfunction
-
-let s:kind.action_table.delete = {
-      \ 'description' : 'delete todo',
-      \ 'is_selectable': 1,
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
-function! s:kind.action_table.delete.func(candidates)
-  if input('delete ok? [y/N]') =~? '^y\%[es]$'
-    for candidate in a:candidates
-      " TODO 毎回ファイルI/Oさせてるので非効率
-      call s:delete(s:struct(candidate.source__line))
-    endfor
-  endif
-endfunction
-
-let s:kind.action_table.toggle = {
-      \ 'description' : 'toggle done/undone',
-      \ 'is_selectable': 1,
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
-function! s:kind.action_table.toggle.func(candidates)
-  for candidate in a:candidates
-    " TODO 毎回ファイルI/Oさせてるので非効率
-    call s:toggle(s:struct(candidate.source__line))
-  endfor
-endfunction
-
-let s:kind.action_table.add_tag = {
-      \ 'description' : 'add todo tag',
-      \ 'is_selectable': 1,
-      \ 'is_quit': 0,
-      \ 'is_invalidate_cache': 1,
-      \ }
+let s:kind.action_table.add_tag = { 'description' : 'add todo tag', 'is_selectable': 1 }
 function! s:kind.action_table.add_tag.func(candidates)
   let tags = s:trim(input('Tags(comma separate):'))
   if !empty(tags)
@@ -225,9 +173,47 @@ function! s:kind.action_table.add_tag.func(candidates)
   endif
 endfunction
 
+let s:kind.action_table.edit_tag = { 'description' : 'edit todo tag' }
+function! s:kind.action_table.edit_tag.func(candidate)
+  let todo = s:struct(a:candidate.source__line)
+  let before = join(map(todo.tags, 'substitute(v:val, "^@", "", "")'), ',')
+  let after = s:trim(input('Tags(comma separate):' . before . '->', before))
+  if !empty(after)
+    let todo.tags = map(split(after, ','), '"@".v:val')
+    call s:rename(todo)
+  endif
+endfunction
+
+let s:kind.action_table.delete = { 'description' : 'delete todo', 'is_selectable': 1 }
+function! s:kind.action_table.delete.func(candidates)
+  if input('delete ok? [y/N]') =~? '^y\%[es]$'
+    for candidate in a:candidates
+      " TODO 毎回ファイルI/Oさせてるので非効率
+      call s:delete(s:struct(candidate.source__line))
+    endfor
+  endif
+endfunction
+
+let s:kind.action_table.toggle = { 'description' : 'toggle done/undone', 'is_selectable': 1 }
+function! s:kind.action_table.toggle.func(candidates)
+  for candidate in a:candidates
+    " TODO 毎回ファイルI/Oさせてるので非効率
+    call s:toggle(s:struct(candidate.source__line))
+  endfor
+endfunction
+
+let s:parent_kind = {
+      \ 'is_quit': 0,
+      \ 'is_invalidate_cache': 1,
+      \ }
+call extend(s:kind.action_table.edit_title, s:parent_kind, 'error')
+call extend(s:kind.action_table.add_tag, s:parent_kind, 'error')
+call extend(s:kind.action_table.edit_tag, s:parent_kind, 'error')
+call extend(s:kind.action_table.delete, s:parent_kind, 'error')
+call extend(s:kind.action_table.toggle, s:parent_kind, 'error')
+
 " TODO defineのほうが呼ばれない
 call unite#define_kind(s:kind)
-echo 'ok'
 unlet s:kind
 
 let &cpo = s:save_cpo
