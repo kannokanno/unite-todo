@@ -2,7 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
  
 let s:base_dir = get(g:, 'unite_data_directory', expand('~/.unite'))
-let s:todo_file = s:base_dir . '/todo/todo'
+let s:todo_file = s:base_dir . '/todo/todo.txt'
 let s:note_dir = s:base_dir . '/todo/note'
 
 function! unite#todo#init()
