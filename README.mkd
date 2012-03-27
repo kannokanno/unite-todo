@@ -1,7 +1,7 @@
 # unite-todo(v0.0.1)
 unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 
-# Requires
+## Requires
 * [unite.vim](https://github.com/Shougo/unite.vim)
 
 ## Usage
