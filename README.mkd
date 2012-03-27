@@ -1,0 +1,52 @@
+# unite-todo(v0.0.1)
+unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
+
+# Requires
+* [unite.vim](https://github.com/Shougo/unite.vim)
+
+## Usage
+### TODO新規作成
+コマンドラインから入力
+
+    :UniteTodoAddSimple
+
+現在のバッファ全体に対し、1行1TODOとして追加
+
+    :UniteTodoAddBuffer
+
+選択された全体に対し、1行1TODOとして追加
+
+    :UniteTodoAddRange
+
+### TODO一覧を表示
+すべてのTODOを表示する
+
+    :Unite todo
+
+完了したすべてのTODOを表示する
+
+    :Unite todo:done
+
+未完了のすべてのTODOを表示する
+
+    :Unite todo:undone
+
+指定したタグが付いているすべてのTODOを表示する
+
+    :Unite todo:tag:<tag_name>
+
+### :Unite todoで開いた一覧から行える主なアクション
+* toggle(default)
+    * 完了/未完了の状態変化
+* edit_title
+    * TODO名の変更
+* add_tag
+    * タグの追加。カンマ区切りで複数登録可能
+* edit_tag
+    * タグ名の変更
+* delete
+    * TODOの削除
+* openやtabopenなど
+    * TODOに関するメモの編集
+* preview
+    * TODOのメモをプレビュー
