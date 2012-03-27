@@ -45,7 +45,7 @@ endfunction
 function! unite#todo#update(structs)
   call writefile(
         \ map(a:structs, 'join([v:val.id, v:val.status, v:val.title, join(v:val.tags, ",")], ",")'),
-        \ unite#todo#todo_file)
+        \ s:todo_file)
 endfunction
 
 function! unite#todo#new(id, title)
