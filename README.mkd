@@ -16,6 +16,7 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
     :UniteTodoAddBuffer
 
 オプションとして以下を使用できる
+
 * -tag
     * TODO追加後に続けてtagを入力する
 * -memo
