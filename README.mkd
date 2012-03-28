@@ -38,8 +38,10 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 ### :Unite todoで開いた一覧から行える主なアクション
 * toggle(default)
     * 完了/未完了の状態変化
-* edit_title
+* edit
     * TODO名の変更
+* edit_title
+    * editと同じ
 * add_tag
     * タグの追加。カンマ区切りで複数登録可能
 * edit_tag
@@ -47,6 +49,12 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 * delete
     * TODOの削除
 * openやtabopenなど
-    * TODOに関するメモの編集
+    * TODOに関するノートの編集
 * preview
-    * TODOのメモをプレビュー
+    * TODOのノートをプレビュー
+
+### 設定値
+* g:unite_todo_data_directory
+    * TODOおよびノートを保存するディレクトリ。デフォルトはg:unite_data_directoryがあればその値を用い、それもなければ~/.uniteとなる
+* g:unite_todo_note_suffix
+    * ノートの拡張子。デフォルトはmarkdown

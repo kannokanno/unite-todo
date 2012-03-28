@@ -10,8 +10,35 @@ let s:kind = {
       \ 'default_action' : 'toggle',
       \ 'action_table': {},
       \ 'is_selectable': 1,
-      \ 'parents': ['jump_list'],
+      \ 'parents': ['openable'],
       \}
+
+let s:kind.action_table.open = { 'description' : 'open note of todo', 'is_selectable': 1 }
+function! s:kind.action_table.open.func(candidates)
+  for candidate in a:candidates
+    let todo = unite#todo#struct(candidate.source__line)
+    execute ':edit ' . todo.note
+  endfor
+endfunction
+
+let s:kind.action_table.preview = { 'description' : 'preview note' }
+function! s:kind.action_table.preview.func(candidate)
+  let todo = unite#todo#struct(a:candidate.source__line)
+  if filereadable(todo.note)
+      execute ':pedit ' . todo.note
+  endif
+endfunction
+
+" TODO edit_titleと同じ処理。移譲する設定があるはず
+let s:kind.action_table.edit = { 'description' : 'edit todo title' }
+function! s:kind.action_table.edit.func(candidate)
+  let todo = unite#todo#struct(a:candidate.source__line)
+  let after = unite#todo#trim(input('Todo:' . todo.title . '->', todo.title))
+  if !empty(after)
+    let todo.title = after
+    call unite#todo#rename(todo)
+  endif
+endfunction
 
 let s:kind.action_table.edit_title = { 'description' : 'edit todo title' }
 function! s:kind.action_table.edit_title.func(candidate)
@@ -69,11 +96,13 @@ let s:parent_kind = {
       \ 'is_quit': 0,
       \ 'is_invalidate_cache': 1,
       \ }
+" TODO 回せないかな
 call extend(s:kind.action_table.edit_title, s:parent_kind, 'error')
 call extend(s:kind.action_table.add_tag, s:parent_kind, 'error')
 call extend(s:kind.action_table.edit_tag, s:parent_kind, 'error')
 call extend(s:kind.action_table.delete, s:parent_kind, 'error')
 call extend(s:kind.action_table.toggle, s:parent_kind, 'error')
+call extend(s:kind.action_table.preview, s:parent_kind, 'error')
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
