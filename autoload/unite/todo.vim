@@ -2,7 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:unite_todo_data_directory = get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite')))
-let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'markdown')
+let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'txt')
 let g:unite_todo_note_title = get(g:, 'unite_todo_note_title', 0)
  
 let s:todo_file = printf('%s/todo/todo.txt', g:unite_todo_data_directory)
