@@ -6,6 +6,7 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 
 ## Usage
 ### TODO新規作成
+
 コマンドラインから入力
 範囲指定の場合は選択された全体に対し、1行1TODOとして追加
 
