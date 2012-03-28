@@ -57,8 +57,34 @@ function! unite#todo#new(id, title)
   return unite#todo#struct(join([a:id, '[ ]', a:title], ','))
 endfunction
 
+" TODO dirty
+function! unite#todo#input(args, use_range, line1, line2)
+  let args = split(a:args)
+  let todo_list = a:use_range ?
+        \ unite#todo#add(reverse(getline(a:line1, a:line2))) :
+        \ unite#todo#add([input('Todo:')])
+
+  if count(args, '-tag') > 0
+    for todo in todo_list
+      let tags = unite#todo#trim(input(printf('[%s] Tags(comma separate):', todo.title)))
+      if !empty(tags)
+        let todo.tags = map(split(tags, ','), '"@".v:val')
+        call unite#todo#rename(todo)
+      endif
+    endfor
+    unlet todo
+  endif
+  if count(args, '-memo') > 0
+    for todo in todo_list
+      tabnew 
+      call unite#todo#open(todo)
+    endfor
+  endif
+endfunction
+
 " TODO もうちょい綺麗に
 function! unite#todo#add(title_list)
+  let added = []
   let size = len(a:title_list)
   if size == 0
     echo 'todo is empty'
@@ -66,10 +92,13 @@ function! unite#todo#add(title_list)
     for i in range(0, size-1)
       let title = unite#todo#trim(a:title_list[i])
       if !empty(title)
-        call unite#todo#update(insert(unite#todo#all(), unite#todo#new(localtime().'_'.i, title)))
+        let todo = unite#todo#new(localtime().'_'.i, title)
+        call unite#todo#update(insert(unite#todo#all(), todo))
+        call add(added, todo)
       endif
     endfor
   endif
+  return added
 endfunction
 
 function! unite#todo#trim(str)
@@ -107,6 +136,10 @@ function! unite#todo#toggle(todo)
     call add(list, todo)
   endfor
   call unite#todo#update(list)
+endfunction
+
+function! unite#todo#open(todo)
+  execute ':edit ' . a:todo.note
 endfunction
 
 let &cpo = s:save_cpo

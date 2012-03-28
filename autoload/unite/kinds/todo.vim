@@ -16,8 +16,7 @@ let s:kind = {
 let s:kind.action_table.open = { 'description' : 'open note of todo', 'is_selectable': 1 }
 function! s:kind.action_table.open.func(candidates)
   for candidate in a:candidates
-    let todo = unite#todo#struct(candidate.source__line)
-    execute ':edit ' . todo.note
+    call unite#todo#open(unite#todo#struct(candidate.source__line))
   endfor
 endfunction
 
@@ -25,7 +24,7 @@ let s:kind.action_table.preview = { 'description' : 'preview note' }
 function! s:kind.action_table.preview.func(candidate)
   let todo = unite#todo#struct(a:candidate.source__line)
   if filereadable(todo.note)
-      execute ':pedit ' . todo.note
+    execute ':pedit ' . todo.note
   endif
 endfunction
 

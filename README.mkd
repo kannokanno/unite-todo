@@ -7,6 +7,7 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 ## Usage
 ### TODO新規作成
 コマンドラインから入力
+範囲指定の場合は選択された全体に対し、1行1TODOとして追加
 
     :UniteTodoAddSimple
 
@@ -14,9 +15,11 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 
     :UniteTodoAddBuffer
 
-選択された全体に対し、1行1TODOとして追加
-
-    :UniteTodoAddRange
+オプションとして以下を使用できる
+* -tag
+    * TODO追加後に続けてtagを入力する
+* -memo
+    * TODO追加後に続けてノートを開く
 
 ### TODO一覧を表示
 すべてのTODOを表示する

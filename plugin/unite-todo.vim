@@ -10,9 +10,8 @@ let g:loaded_unite_todo = 1
 let s:save_cpo = &cpo
 set cpo&vim
  
-command! -nargs=0 UniteTodoAddSimple call unite#todo#add([input('Todo:')])
-command! -nargs=0 -range UniteTodoAddRange call unite#todo#add(reverse(getbufline('%', <line1>, <line2>)))
-command! -nargs=0 UniteTodoAddBuffer call unite#todo#add(reverse(getbufline('%', 1, '$')))
+command! -nargs=* -range=0 UniteTodoAddSimple call unite#todo#input(<q-args>, <count>, <line1>, <line2>)
+command! -nargs=* UniteTodoAddBuffer call unite#todo#input(<q-args>, 1, 1, '$')
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
