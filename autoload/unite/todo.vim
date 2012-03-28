@@ -1,9 +1,12 @@
 let s:save_cpo = &cpo
 set cpo&vim
+
+let g:unite_todo_data_directory = get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite')))
+let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'markdown')
+let g:unite_todo_note_title = get(g:, 'unite_todo_note_title', 0)
  
-let s:base_dir = get(g:, 'unite_data_directory', expand('~/.unite'))
-let s:todo_file = s:base_dir . '/todo/todo.txt'
-let s:note_dir = s:base_dir . '/todo/note'
+let s:todo_file = printf('%s/todo/todo.txt', g:unite_todo_data_directory)
+let s:note_dir = printf('%s/todo/note', g:unite_todo_data_directory)
 
 function! unite#todo#init()
   if !isdirectory(s:note_dir)
@@ -23,12 +26,14 @@ function! unite#todo#struct(line)
   else
     let tags = words[3:]
   endif
+
+  let note_title = g:unite_todo_note_title ? words[2] : words[0]
   return {
         \ 'id': words[0],
         \ 'status': words[1],
         \ 'title': words[2],
         \ 'tags': tags,
-        \ 'note': s:note_dir . '/' . words[0] . '.txt',
+        \ 'note': printf('%s/%s.%s', s:note_dir, note_title, g:unite_todo_note_suffix),
         \ 'line': a:line,
         \ }
 endfunction
