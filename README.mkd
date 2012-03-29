@@ -1,4 +1,4 @@
-# unite-todo(v0.0.1)
+# unite-todo(v0.0.2)
 unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
 
 ## Requires
