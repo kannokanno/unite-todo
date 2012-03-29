@@ -72,7 +72,6 @@ function! unite#todo#input(args, use_range, line1, line2)
         call unite#todo#rename(todo)
       endif
     endfor
-    unlet todo
   endif
   if count(args, '-memo') > 0
     for todo in todo_list
