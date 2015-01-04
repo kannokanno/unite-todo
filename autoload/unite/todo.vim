@@ -33,7 +33,7 @@ function! unite#todo#struct(line)
         \ 'status': words[1],
         \ 'title': words[2],
         \ 'tags': tags,
-        \ 'note': printf('%s/%s.%s', s:note_dir, note_title, g:unite_todo_note_suffix),
+        \ 'note': unite#todo#formatNoteString(note_title),
         \ 'line': a:line,
         \ }
 endfunction
@@ -54,9 +54,7 @@ function! unite#todo#update(structs)
 endfunction
 
 function! unite#todo#new(id, title) abort
-  if unite#todo#exists(a:id)
-    throw "existsSameTask"
-  endif
+  call unite#todo#checkExists(a:id)
   return unite#todo#struct(join([a:id, '[ ]', a:title], ','))
 endfunction
 
@@ -97,9 +95,6 @@ function! unite#todo#add(title_list)
         try
           let todo = unite#todo#new(s:normalization(trimmedTitle), trimmedTitle)
         catch "existsSameTask"
-         " TODO inputの時のプロンプトから改行されない.
-          echo " "
-          echo "同一タイトルのタスクが存在しています"
           continue
         endtry
         call unite#todo#update(insert(unite#todo#all(), todo))
@@ -114,13 +109,21 @@ function! unite#todo#trim(str)
   return substitute(a:str, '^\s\+\|\s\+$', '', 'g')
 endfunction
 
-function! unite#todo#rename(todo)
+function! unite#todo#rename(newTodo)
   let list = []
-  for todo in unite#todo#all()
-    if todo.id == a:todo.id
-      call add(list, a:todo)
+  for oldTodo in unite#todo#all()
+    if oldTodo.id == a:newTodo.id
+      if oldTodo.title != a:newTodo.title
+        try
+          call add(list, unite#todo#changeTitle(oldTodo, a:newTodo.title))
+        catch "existsSameTask"
+          return
+        endtry
+      else
+        call add(list, a:newTodo)
+      endif
     else
-      call add(list, todo)
+      call add(list, oldTodo)
     endif
   endfor
   call unite#todo#update(list)
@@ -157,13 +160,28 @@ function! s:normalization(str)
   return l:str
 endfunction
 
-function! unite#todo#exists(id)
+function! unite#todo#checkExists(id) abort
   let existings = filter(readfile(s:todo_file), 'v:val =~ "' . a:id . ',.*"')
   if len(existings)
-    return 1
-  else
-    return 0
+    echom " "
+    echom "同一タスクが存在しています"
+    throw "existsSameTask"
   endif
+endfunction
+
+function! unite#todo#formatNoteString(note_title)
+  return printf('%s/%s.%s', s:note_dir, a:note_title, g:unite_todo_note_suffix)
+endfunction
+
+function! unite#todo#changeTitle(oldTodo, newTitle) abort
+  let l:oldNote = a:oldTodo.note
+  let l:newTodo = a:oldTodo
+  let l:newTodo.id = s:normalization(a:newTitle)
+  call unite#todo#checkExists(l:newTodo.id)
+  let l:newTodo.title = a:newTitle
+  let l:newTodo.note = unite#todo#formatNoteString(a:newTitle)
+  call rename(l:oldNote, l:newTodo.note)
+  return l:newTodo
 endfunction
 
 let &cpo = s:save_cpo

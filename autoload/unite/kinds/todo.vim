@@ -32,9 +32,9 @@ endfunction
 let s:kind.action_table.edit = { 'description' : 'edit todo title' }
 function! s:kind.action_table.edit.func(candidate)
   let todo = unite#todo#struct(a:candidate.source__line)
-  let after = unite#todo#trim(input('Todo:' . todo.title . '->', todo.title))
-  if !empty(after)
-    let todo.title = after
+  let afterTitle = unite#todo#trim(input('Todo:' . todo.title . '->', todo.title))
+  if !empty(afterTitle)
+    let todo.title = afterTitle
     call unite#todo#rename(todo)
   endif
 endfunction
@@ -42,9 +42,9 @@ endfunction
 let s:kind.action_table.edit_title = { 'description' : 'edit todo title' }
 function! s:kind.action_table.edit_title.func(candidate)
   let todo = unite#todo#struct(a:candidate.source__line)
-  let after = unite#todo#trim(input('Todo:' . todo.title . '->', todo.title))
-  if !empty(after)
-    let todo.title = after
+  let afterTitle = unite#todo#trim(input('Todo:' . todo.title . '->', todo.title))
+  if !empty(afterTitle)
+    let todo.title = afterTitle
     call unite#todo#rename(todo)
   endif
 endfunction
