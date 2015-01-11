@@ -148,7 +148,7 @@ function! unite#todo#toggle(todo)
 endfunction
 
 function! unite#todo#open(todo)
-  execute ':edit ' . a:todo.note
+  execute ':edit ' . fnameescape(a:todo.note)
 endfunction
 
 let &cpo = s:save_cpo
