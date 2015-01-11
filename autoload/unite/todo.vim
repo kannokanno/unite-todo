@@ -117,7 +117,7 @@ endfunction
 function! unite#todo#rename(todo)
   let list = []
   for todo in unite#todo#all()
-    if todo.id == a:todo.id
+    if todo.id == a:todo.id 
       call add(list, a:todo)
     else
       call add(list, todo)
@@ -158,7 +158,7 @@ function! s:normalization(str)
 endfunction
 
 function! unite#todo#exists(id)
-  let existings = filter(readfile(s:todo_file), 'v:val =~ "' . a:id . ',.*"')
+  let existings = filter(readfile(s:todo_file), 'v:val =~ "' . a:id . '.*"')
   if len(existings)
     return 1
   else
