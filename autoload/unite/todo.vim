@@ -53,10 +53,7 @@ function! unite#todo#update(structs)
         \ s:todo_file)
 endfunction
 
-function! unite#todo#new(id, title) abort
-  if unite#todo#exists(a:id)
-    throw "existsSameTask"
-  endif
+function! unite#todo#new(id, title)
   return unite#todo#struct(join([a:id, '[ ]', a:title], ','))
 endfunction
 
@@ -91,17 +88,10 @@ function! unite#todo#add(title_list)
   if size == 0
     echo 'todo is empty'
   else
-    for l:title in a:title_list
-      let trimmedTitle = unite#todo#trim(l:title)
-      if !empty(trimmedTitle)
-        try
-          let todo = unite#todo#new(s:normalization(trimmedTitle), trimmedTitle)
-        catch "existsSameTask"
-         " TODO inputの時のプロンプトから改行されない.
-          echo " "
-          echo "同一タイトルのタスクが存在しています"
-          continue
-        endtry
+    for i in range(0, size-1)
+      let title = unite#todo#trim(a:title_list[i])
+      if !empty(title)
+        let todo = unite#todo#new(localtime().'_'.i, title)
         call unite#todo#update(insert(unite#todo#all(), todo))
         call add(added, todo)
       endif
@@ -149,21 +139,6 @@ endfunction
 
 function! unite#todo#open(todo)
   execute ':edit ' . a:todo.note
-endfunction
-
-function! s:normalization(str)
-  let l:str = a:str
-  let l:str = substitute(l:str, "[ /\\'\"]", '_', 'g')
-  return l:str
-endfunction
-
-function! unite#todo#exists(id)
-  let existings = filter(readfile(s:todo_file), 'v:val =~ "' . a:id . '.*"')
-  if len(existings)
-    return 1
-  else
-    return 0
-  endif
 endfunction
 
 let &cpo = s:save_cpo
