@@ -91,7 +91,7 @@ function! unite#todo#add(title_list)
     for i in range(0, size-1)
       let title = unite#todo#trim(a:title_list[i])
       if !empty(title)
-        let todo = unite#todo#new(localtime().'_'.i, title)
+        let todo = unite#todo#new(localtime().'_'.i.'_'.s:esctitle(title), title)
         call unite#todo#update(insert(unite#todo#all(), todo))
         call add(added, todo)
       endif
@@ -102,6 +102,16 @@ endfunction
 
 function! unite#todo#trim(str)
   return substitute(a:str, '^\s\+\|\s\+$', '', 'g')
+endfunction
+
+function! s:esctitle(str)
+  let l:todo_title_pattern = "[ /\\'\"]"
+  let str = a:str
+  " let str = tolower(str)
+  let str = substitute(str, l:todo_title_pattern, '-', 'g')
+  let str = substitute(str, '\(--\)\+', '-', 'g')
+  let str = substitute(str, '\(^-\|-$\)', '', 'g')
+  return str
 endfunction
 
 function! unite#todo#rename(todo)
