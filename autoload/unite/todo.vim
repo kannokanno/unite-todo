@@ -1,7 +1,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:unite_todo_data_directory = get(g:, expand('unite_todo_data_directory'), get(g:, 'unite_data_directory', expand('~/.unite')))
+let g:unite_todo_data_directory = expand(get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite'))))
 let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'txt')
 let g:unite_todo_note_title = get(g:, 'unite_todo_note_title', 0)
  
