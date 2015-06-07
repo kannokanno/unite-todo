@@ -3,6 +3,7 @@ set cpo&vim
 
 let g:unite_todo_data_directory = expand(get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite'))))
 let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'txt')
+let g:unite_todo_note_opener = get(g:, 'unite_todo_note_opener', 'edit')
  
 let s:todo_file = printf('%s/todo/todo.txt', g:unite_todo_data_directory)
 let s:note_dir = printf('%s/todo/note', g:unite_todo_data_directory)
@@ -73,7 +74,6 @@ function! unite#todo#input(args, use_range, line1, line2)
   endif
   if count(args, '-memo') > 0
     for todo in todo_list
-      tabnew 
       call unite#todo#open(todo)
     endfor
   endif
@@ -146,7 +146,7 @@ function! unite#todo#toggle(todo)
 endfunction
 
 function! unite#todo#open(todo)
-  execute ':edit ' . fnameescape(a:todo.note)
+  execute g:unite_todo_note_opener fnameescape(a:todo.note)
 endfunction
 
 function! unite#todo#formatNoteString(id, title)
