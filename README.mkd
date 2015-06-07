@@ -64,3 +64,5 @@ unite-todo is a [unite.vim](https://github.com/Shougo/unite.vim)'s source
     * TODOおよびノートを保存するディレクトリ。デフォルトはg:unite_data_directoryがあればその値を用い、それもなければ~/.uniteとなる
 * g:unite_todo_note_suffix
     * ノートの拡張子。デフォルトはtxt
+* g:unite_todo_note_opener
+    * ノートの開き方(e.g. edit, split, vsplit, tabe)。デフォルトはedit
