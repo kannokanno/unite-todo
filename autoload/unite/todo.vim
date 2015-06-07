@@ -3,7 +3,6 @@ set cpo&vim
 
 let g:unite_todo_data_directory = expand(get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite'))))
 let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'txt')
-let g:unite_todo_note_title = get(g:, 'unite_todo_note_title', 0)
  
 let s:todo_file = printf('%s/todo/todo.txt', g:unite_todo_data_directory)
 let s:note_dir = printf('%s/todo/note', g:unite_todo_data_directory)
@@ -27,13 +26,12 @@ function! unite#todo#struct(line)
     let tags = words[3:]
   endif
 
-  let note_title = g:unite_todo_note_title ? words[2] : words[0]
   return {
         \ 'id': words[0],
         \ 'status': words[1],
         \ 'title': words[2],
         \ 'tags': tags,
-        \ 'note': printf('%s/%s.%s', s:note_dir, note_title, g:unite_todo_note_suffix),
+        \ 'note': unite#todo#formatNoteString(words[0], words[2]),
         \ 'line': a:line,
         \ }
 endfunction
@@ -91,7 +89,7 @@ function! unite#todo#add(title_list)
     for i in range(0, size-1)
       let title = unite#todo#trim(a:title_list[i])
       if !empty(title)
-        let todo = unite#todo#new(localtime().'_'.i.'_'.s:esctitle(title), title)
+        let todo = unite#todo#new(strftime("%Y%m%d_%H%M%S").'_'.i, title)
         call unite#todo#update(insert(unite#todo#all(), todo))
         call add(added, todo)
       endif
@@ -118,7 +116,7 @@ function! unite#todo#rename(todo)
   let list = []
   for todo in unite#todo#all()
     if todo.id == a:todo.id 
-      call add(list, a:todo)
+      call add(list, unite#todo#changeTitle(todo, a:todo.title))
     else
       call add(list, todo)
     endif
@@ -149,6 +147,19 @@ endfunction
 
 function! unite#todo#open(todo)
   execute ':edit ' . fnameescape(a:todo.note)
+endfunction
+
+function! unite#todo#formatNoteString(id, title)
+  return printf('%s/%s.%s', s:note_dir, s:esctitle(a:id . "_" . a:title), g:unite_todo_note_suffix)
+endfunction
+
+function! unite#todo#changeTitle(oldTodo, newTitle) abort
+  let l:oldNote = a:oldTodo.note
+  let l:newTodo = a:oldTodo
+  let l:newTodo.title = a:newTitle
+  let l:newTodo.note = unite#todo#formatNoteString(l:newTodo.id, l:newTodo.title)
+  call rename(l:oldNote, l:newTodo.note)
+  return l:newTodo
 endfunction
 
 let &cpo = s:save_cpo
