@@ -11,7 +11,7 @@ function! s:source.gather_candidates(args, context)
   let list = empty(a:args) ? unite#todo#all() : unite#todo#select(s:pattern(a:args))
   for todo in list
     call add(candidates, {
-          \   "word": join([todo.status, todo.title, join(todo.tags)]),
+          \   "word": join(filter([todo.status, todo.title, join(todo.tags)], 'v:val !=# ""')),
           \   "kind": "todo",
           \   "action__path": todo.note,
           \   "source__line": todo.line,
