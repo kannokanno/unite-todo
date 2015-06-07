@@ -91,7 +91,7 @@ function! unite#todo#add(title_list)
     for i in range(0, size-1)
       let title = unite#todo#trim(a:title_list[i])
       if !empty(title)
-        let todo = unite#todo#new(localtime().'_'.i.'_'.s:esctitle(title), title)
+        let todo = unite#todo#new(strftime("%Y%m%d_%H%M%S").'_'.i.'_'.s:esctitle(title), title)
         call unite#todo#update(insert(unite#todo#all(), todo))
         call add(added, todo)
       endif
