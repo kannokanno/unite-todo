@@ -116,7 +116,7 @@ function! unite#todo#rename(todo)
   let list = []
   for todo in unite#todo#all()
     if todo.id == a:todo.id 
-      call add(list, unite#todo#changeTitle(todo, a:todo.title))
+      call add(list, unite#todo#changeTitle(todo, a:todo))
     else
       call add(list, todo)
     endif
@@ -153,13 +153,10 @@ function! unite#todo#formatNoteString(id, title)
   return printf('%s/%s.%s', s:note_dir, s:esctitle(a:id . "_" . a:title), g:unite_todo_note_suffix)
 endfunction
 
-function! unite#todo#changeTitle(oldTodo, newTitle) abort
-  let l:oldNote = a:oldTodo.note
-  let l:newTodo = a:oldTodo
-  let l:newTodo.title = a:newTitle
-  let l:newTodo.note = unite#todo#formatNoteString(l:newTodo.id, l:newTodo.title)
-  call rename(l:oldNote, l:newTodo.note)
-  return l:newTodo
+function! unite#todo#changeTitle(oldTodo, newTodo) abort
+  let l:newNote = unite#todo#formatNoteString(a:newTodo.id, a:newTodo.title)
+  call rename(a:oldTodo.note, l:newNote)
+  return a:newTodo
 endfunction
 
 let &cpo = s:save_cpo
