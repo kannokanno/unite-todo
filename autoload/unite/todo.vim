@@ -58,7 +58,7 @@ endfunction
 
 " TODO dirty
 function! unite#todo#input(args, use_range, line1, line2)
-  let selected = unite#todo#getSelected()
+  let selected = a:use_range == -1 ? getline(a:line1, a:line2) : unite#todo#getSelected()
   let args = split(a:args)
   let todo_list = a:use_range ?
         \ unite#todo#add(reverse(selected)) :
