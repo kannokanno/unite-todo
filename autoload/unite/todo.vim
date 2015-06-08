@@ -58,9 +58,10 @@ endfunction
 
 " TODO dirty
 function! unite#todo#input(args, use_range, line1, line2)
+  let selected = unite#todo#getSelected()
   let args = split(a:args)
   let todo_list = a:use_range ?
-        \ unite#todo#add(reverse(getline(a:line1, a:line2))) :
+        \ unite#todo#add(reverse(selected)) :
         \ unite#todo#add([input('Todo:')])
 
   if count(args, '-tag') > 0
@@ -157,6 +158,15 @@ function! unite#todo#changeTitle(oldTodo, newTodo) abort
   let l:newNote = unite#todo#formatNoteString(a:newTodo.id, a:newTodo.title)
   call rename(a:oldTodo.note, l:newNote)
   return a:newTodo
+endfunction
+
+function! unite#todo#getSelected() " <http://nanasi.jp/articles/code/screen/visual.html>
+  let tmp = @@
+  silent normal gvy
+  let selected = @@
+  let @@ = tmp
+  let selectedList = split(selected, "\n")
+  return selectedList
 endfunction
 
 let &cpo = s:save_cpo
