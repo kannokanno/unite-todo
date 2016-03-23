@@ -89,7 +89,8 @@ g:unite_todo_data_directory                     *g:unite_todo_data_directory*
 
     The directory where your TODO items are stored.
 
-    Default value is |expand|('~/.unite').
+    Default value is |g:unite_data_directory| or |expand|('~/.unite') if the
+    former does not exist.
 
 g:unite_todo_note_suffix                        *g:unite_todo_note_suffix*
     
