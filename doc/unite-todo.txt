@@ -25,13 +25,13 @@ source parameter.
 To view the list of all completed/uncompleted TODOS, one can pass the "done"
 or "undone" argument to this command:
 
-  :Unite todo: done
-  :Unite todo: undone
+  :Unite todo:done
+  :Unite todo:undone
 
 To view the list of all TODOS with a specific tag, one can pass the "tag"
 argument:
 
-  :Unite todo: tag: <tag>
+  :Unite todo:tag:<tag>
 
 unite-todo then shows a list of TODO items using unite.vim's interface. The
 default action is toggling the completion status of the TODO items. See
