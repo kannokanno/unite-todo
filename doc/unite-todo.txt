@@ -1,6 +1,6 @@
-*unite-todo.txt*	For Vim version 7.4	Last change: 2016 March 23
+*unite-todo.txt*	For Vim version 7.4	Last change: 2016 March 26
 
-Author: kanno
+Author: kanno, assout
 License: public domain.
 
 INTRODUCTION                                    *unite-todo*
@@ -96,6 +96,14 @@ g:unite_todo_note_suffix                        *g:unite_todo_note_suffix*
     
     The file extension used for your TODO items.
 
-    Default value is 'txt'
+    Default value is 'txt'.
+
+g:unite_todo_note_opener                        *g:unite_todo_note_opener*
+    
+    The default command to open TODO items. Can be set to e.g. 'split',
+    'vsplit', etc.
+
+    Default value is 'edit'.
+
 
 vim: tw=80 ft=help
