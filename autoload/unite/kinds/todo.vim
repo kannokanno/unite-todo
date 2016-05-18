@@ -10,7 +10,7 @@ let s:kind = {
       \ 'default_action' : 'toggle',
       \ 'action_table': {},
       \ 'is_selectable': 1,
-      \ 'parents': ['openable'],
+      \ 'parents': ['common', 'openable'],
       \}
 
 let s:kind.action_table.open = { 'description' : 'open note of todo', 'is_selectable': 1 }

@@ -1,9 +1,9 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:unite_todo_data_directory = get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite')))
+let g:unite_todo_data_directory = expand(get(g:, 'unite_todo_data_directory', get(g:, 'unite_data_directory', expand('~/.unite'))))
 let g:unite_todo_note_suffix = get(g:, 'unite_todo_note_suffix', 'txt')
-let g:unite_todo_note_title = get(g:, 'unite_todo_note_title', 0)
+let g:unite_todo_note_opener = get(g:, 'unite_todo_note_opener', 'edit')
  
 let s:todo_file = printf('%s/todo/todo.txt', g:unite_todo_data_directory)
 let s:note_dir = printf('%s/todo/note', g:unite_todo_data_directory)
@@ -27,13 +27,12 @@ function! unite#todo#struct(line)
     let tags = words[3:]
   endif
 
-  let note_title = g:unite_todo_note_title ? words[2] : words[0]
   return {
         \ 'id': words[0],
         \ 'status': words[1],
         \ 'title': words[2],
         \ 'tags': tags,
-        \ 'note': printf('%s/%s.%s', s:note_dir, note_title, g:unite_todo_note_suffix),
+        \ 'note': unite#todo#formatNoteString(words[0], words[2]),
         \ 'line': a:line,
         \ }
 endfunction
@@ -59,9 +58,10 @@ endfunction
 
 " TODO dirty
 function! unite#todo#input(args, use_range, line1, line2)
+  let selected = a:use_range == -1 ? getline(a:line1, a:line2) : unite#todo#getSelected()
   let args = split(a:args)
   let todo_list = a:use_range ?
-        \ unite#todo#add(reverse(getline(a:line1, a:line2))) :
+        \ unite#todo#add(reverse(selected)) :
         \ unite#todo#add([input('Todo:')])
 
   if count(args, '-tag') > 0
@@ -75,7 +75,6 @@ function! unite#todo#input(args, use_range, line1, line2)
   endif
   if count(args, '-memo') > 0
     for todo in todo_list
-      tabnew 
       call unite#todo#open(todo)
     endfor
   endif
@@ -91,7 +90,7 @@ function! unite#todo#add(title_list)
     for i in range(0, size-1)
       let title = unite#todo#trim(a:title_list[i])
       if !empty(title)
-        let todo = unite#todo#new(localtime().'_'.i, title)
+        let todo = unite#todo#new(strftime("%Y%m%d_%H%M%S").'_'.i, title)
         call unite#todo#update(insert(unite#todo#all(), todo))
         call add(added, todo)
       endif
@@ -104,11 +103,21 @@ function! unite#todo#trim(str)
   return substitute(a:str, '^\s\+\|\s\+$', '', 'g')
 endfunction
 
+function! s:esctitle(str)
+  let l:todo_title_pattern = "[ /\\'\"]"
+  let str = a:str
+  " let str = tolower(str)
+  let str = substitute(str, l:todo_title_pattern, '-', 'g')
+  let str = substitute(str, '\(--\)\+', '-', 'g')
+  let str = substitute(str, '\(^-\|-$\)', '', 'g')
+  return str
+endfunction
+
 function! unite#todo#rename(todo)
   let list = []
   for todo in unite#todo#all()
     if todo.id == a:todo.id 
-      call add(list, a:todo)
+      call add(list, unite#todo#changeTitle(todo, a:todo))
     else
       call add(list, todo)
     endif
@@ -138,7 +147,26 @@ function! unite#todo#toggle(todo)
 endfunction
 
 function! unite#todo#open(todo)
-  execute ':edit ' . a:todo.note
+  execute g:unite_todo_note_opener fnameescape(a:todo.note)
+endfunction
+
+function! unite#todo#formatNoteString(id, title)
+  return printf('%s/%s.%s', s:note_dir, s:esctitle(a:id . "_" . a:title), g:unite_todo_note_suffix)
+endfunction
+
+function! unite#todo#changeTitle(oldTodo, newTodo) abort
+  let l:newNote = unite#todo#formatNoteString(a:newTodo.id, a:newTodo.title)
+  call rename(a:oldTodo.note, l:newNote)
+  return a:newTodo
+endfunction
+
+function! unite#todo#getSelected() " <http://nanasi.jp/articles/code/screen/visual.html>
+  let tmp = @@
+  silent normal gvy
+  let selected = @@
+  let @@ = tmp
+  let selectedList = split(selected, "\n")
+  return selectedList
 endfunction
 
 let &cpo = s:save_cpo

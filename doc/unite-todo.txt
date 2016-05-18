@@ -1,0 +1,109 @@
+*unite-todo.txt*	For Vim version 7.4	Last change: 2016 March 26
+
+Author: kanno, assout
+License: public domain.
+
+INTRODUCTION                                    *unite-todo*
+
+*unite-todo* is a |unite|'s source which provides a simple TODO list
+management.
+
+INSTALL                                         *unite-todo-install*
+
+Install the distributed files into your Vim script directory which is
+usually $HOME/.vim, or $HOME/vimfiles on Windows.
+
+USAGE                                           *unite-todo-usage*
+
+SHOW TODOS~
+
+To show the list of all TODOS, execute the |:Unite| command with "todo" as a
+source parameter.
+
+  :Unite todo
+
+To view the list of all completed/uncompleted TODOS, one can pass the "done"
+or "undone" argument to this command:
+
+  :Unite todo:done
+  :Unite todo:undone
+
+To view the list of all TODOS with a specific tag, one can pass the "tag"
+argument:
+
+  :Unite todo:tag:<tag>
+
+unite-todo then shows a list of TODO items using unite.vim's interface. The
+default action is toggling the completion status of the TODO items. See
+|unite-kind-attribute-default_action|. Other custom actions are the
+following:
+
+  edit          edit the TODO name
+  edit_title    edit the TODO name
+  add_tag       add tags
+  edit_tag      edit the tags
+  delete        delete the TODO
+  preview       preview the TODO
+
+Other available actions are inherited from |unite-action-openable| such as
+e.g.
+
+  open          edit the TODO in current buffer
+  tabopen       edit the TODO in a new tab
+
+All possible actions can be seen by pressing <TAB>. The default keybindings
+for these actions are those of |unite_default_key_mappings|.
+
+FILTER TODOS~
+
+	See |unite-usage|.
+
+
+COMMANDS                                        *unite-todo-commands*
+
+                                                *unite-todo-:UniteTodoAddSimple*
+:{range}UniteTodoAddSimple [args]   Make each line in the current selection a
+                                    TODO item with the respective line as
+                                    title. If there is no selection a prompt
+                                    will ask you for a title of the TODO item.
+                                    You can pass one or both of the following
+                                    options:
+                                    
+                                    -tag  Apply the given comma-separated list
+                                          of tags to each of the TODO items.
+                                    -memo Start editing the new TODO items in 
+
+                                                *unite-todo-:UniteTodoAddBuffer*
+:{range}UniteTodoAddBuffer [args]   Make each line in the current buffer a
+                                    TODO item. You can pass one or both of the
+                                    following options: 
+
+                                    -tag  Apply the given comma-separated list
+                                          of tags to each of the TODO items.
+                                    -memo Start editing the new TODO items in 
+                                    
+
+VARIABLES				                                *unite-todo-variables*
+
+g:unite_todo_data_directory                     *g:unite_todo_data_directory*
+
+    The directory where your TODO items are stored.
+
+    Default value is |g:unite_data_directory| or |expand|('~/.unite') if the
+    former does not exist.
+
+g:unite_todo_note_suffix                        *g:unite_todo_note_suffix*
+    
+    The file extension used for your TODO items.
+
+    Default value is 'txt'.
+
+g:unite_todo_note_opener                        *g:unite_todo_note_opener*
+    
+    The default command to open TODO items. Can be set to e.g. 'split',
+    'vsplit', etc.
+
+    Default value is 'edit'.
+
+
+vim: tw=80 ft=help

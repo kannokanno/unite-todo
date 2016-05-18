@@ -11,7 +11,7 @@ let s:save_cpo = &cpo
 set cpo&vim
  
 command! -nargs=* -range=0 UniteTodoAddSimple call unite#todo#input(<q-args>, <count>, <line1>, <line2>)
-command! -nargs=* UniteTodoAddBuffer call unite#todo#input(<q-args>, 1, 1, '$')
+command! -nargs=* UniteTodoAddBuffer call unite#todo#input(<q-args>, -1, 1, '$')
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
